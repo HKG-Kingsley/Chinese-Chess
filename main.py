@@ -576,14 +576,14 @@ def main():
             saveFile()
         if menu_button.draw():
             return
-        if reverse_button.draw():
-            if len(Back) != 0:
-                Pieces[temppid].y = Back.pop()
-                Pieces[temppid].x = Back.pop()
-                turns = switch_turn(turns)
-                print("Undo")
-            else:
-                print("No more undo")
+        # if reverse_button.draw():
+        #     if len(Back) != 0:
+        #         Pieces[temppid].y = Back.pop()
+        #         Pieces[temppid].x = Back.pop()
+        #         turns = switch_turn(turns)
+        #         print("Undo")
+        #     else:
+        #         print("No more undo")
         for event in pygame.event.get() :   
             if event.type == pygame.QUIT:
                 running = False
