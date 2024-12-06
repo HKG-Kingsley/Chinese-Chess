@@ -36,24 +36,25 @@ WIDTH = 1200
 HEIGHT = 900
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 stratup = pygame.image.load(os.path.join(image_path, 'Startup_Screen.png')).convert()
-startup = pygame.transform.scale(stratup, (WIDTH, HEIGHT))
+startup = pygame.transform.scale(stratup, (WIDTH, HEIGHT)).convert()
 background = pygame.image.load(os.path.join(image_path, 'Xiangqi_Background.png')).convert()
-background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+background = pygame.transform.scale(background, (WIDTH, HEIGHT)).convert()
 WinR = pygame.image.load(os.path.join(image_path, 'Win_Red.png')).convert()
-WinR = pygame.transform.scale(WinR, (WIDTH, HEIGHT))
+WinR = pygame.transform.scale(WinR, (WIDTH, HEIGHT)).convert()
 WinB = pygame.image.load(os.path.join(image_path, 'Win_Black.png')).convert()
-WinB = pygame.transform.scale(WinB, (WIDTH, HEIGHT))
-screen.fill((255,0,0))
+WinB = pygame.transform.scale(WinB, (WIDTH, HEIGHT)).convert()
 caption = '2025 ICT SBA Project - Chinese Chess - 5B28 Wong King Hang'
 winning_sound = pygame.mixer.Sound(os.path.join(music_path, 'Winning.mp3'))
 music = pygame.mixer.music.load(os.path.join(music_path, 'Normal_BGM.mp3'))
-pygame.display.set_icon(pygame.image.load(os.path.join(image_path, 'icon.png')))
+pygame.display.set_icon(pygame.image.load(os.path.join(image_path, 'icon.png')).convert_alpha())
 #Button initialisation
 start_img = pygame.image.load(os.path.join(image_path, 'start.png')).convert_alpha()
 quit_img = pygame.image.load(os.path.join(image_path, 'quit.png')).convert_alpha()
 rs_img = pygame.image.load(os.path.join(image_path, 'Restart.png')).convert_alpha()
 save_img = pygame.image.load(os.path.join(image_path, 'save.png')).convert_alpha()
 load_img = pygame.image.load(os.path.join(image_path, 'load.png')).convert_alpha()
+menu_img = pygame.image.load(os.path.join(image_path, 'back-button.png')).convert_alpha()
+reverse_img = pygame.image.load(os.path.join(image_path, 'reverse.png')).convert_alpha()
 class Button():
     def __init__(self, x, y, image, scale):
         width = image.get_width()
@@ -67,35 +68,17 @@ class Button():
         action = False
         pos = pygame.mouse.get_pos()
         if self.rect.collidepoint(pos):
-            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
-                action = True
-            if pygame.mouse.get_pressed()[0] == 0:
-                self.clicked = False
-            
-        screen.blit(self.image, (self.rect.x, self.rect.y))
-        return action
-class Save():
-    def __init__(self, x, y, image, scale):
-        width = image.get_width()
-        height = image.get_height()
-        self.image = pygame.transform.scale(image, (int(width * scale), int(height * scale))).convert_alpha()
-        self.rect = self.image.get_rect()
-        self.rect.topleft = (x, y)
-        self.clicked = False
-        
-    def draw(self):
-        action = False
-        pos = pygame.mouse.get_pos()
-        if self.rect.collidepoint(pos):
-            if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False:
+            if pygame.mouse.get_pressed()[0] == 1:
                 action = True
         screen.blit(self.image, (self.rect.x, self.rect.y))
         return action
 start_button = Button(240, 500, start_img,0.5)
 quit_button = Button(600, 500, quit_img,0.5)
 rs_button = Button(240, 500, rs_img,0.5)
-save_button = Save(1080,734, save_img,0.2)
-load_button = Save(1080,734, load_img,0.2)
+save_button = Button(1080,734, save_img,0.2)
+load_button = Button(1080,734, load_img,0.2)
+menu_button = Button(1080,284, menu_img,0.2)
+reverse_button = Button(1080,134, reverse_img,0.2)
 #Chess initialisation
 class chess():
     def __init__(self, id, x, y, colour, status, type, name, image, scale):
@@ -108,11 +91,9 @@ class chess():
         self.name = name
         self.scale = scale
         self.original = image
-        pg = pygame.image.load(os.path.join(chess_path, image)).convert_alpha()
-        width = pg.get_width()
-        height = pg.get_height()
-        self.image = pygame.transform.scale(pg, (int(width * scale), int(height * scale))).convert_alpha()
-        self.rect = self.image.get_rect()
+        self.pg = pygame.image.load(os.path.join(chess_path, image)).convert_alpha()
+        self.width = self.pg.get_width()
+        self.height = self.pg.get_height()
         self.selected = 0
     def draw(self):
         if self.status == 1:
@@ -125,10 +106,7 @@ class chess():
                 s_height = self.image.get_height()
                 self.pos = (toplf[0] + hori_d * self.x - s_width // 2, toplf[1] + Vert_d * self.y - s_height // 2)
             else:
-                pg = pygame.image.load(os.path.join(chess_path, self.original)).convert_alpha()
-                width = pg.get_width()
-                height = pg.get_height()
-                self.image = pygame.transform.scale(pg, (int(width * self.scale), int(height * self.scale))).convert_alpha()
+                self.image = pygame.transform.scale(self.pg, (int(self.width * self.scale), int(self.height * self.scale))).convert_alpha()
                 s_width = self.image.get_width()
                 s_height = self.image.get_height()
                 self.pos = (toplf[0] + hori_d * self.x - s_width // 2, toplf[1] + Vert_d * self.y - s_height // 2)
@@ -150,6 +128,7 @@ class chess():
                 self.selected = 1
             else:
                 self.selected = 0
+                
     def select(self, mousepos):
         if self.pos[0] < mousepos[0] < self.pos[0] + self.image.get_width() and self.pos[1] < mousepos[1] < self.pos[1] + self.image.get_height():
             self.selected = 2
@@ -158,7 +137,6 @@ class chess():
     def move(self, x, y):
         self.x = x
         self.y = y
-        
         if self.selected == 2:
             self.selected = 0
     def eat(self):
@@ -350,7 +328,7 @@ def check_advisors(x,y):
         if 5>= x >= 3 and 2 >= y >= 0:
             if Pieces[pid].x == x-1 or Pieces[pid].x == x+1:
                 return True
-    if Pieces[pid].colour == 1:
+    elif Pieces[pid].colour == 1:
         if 5>= x >= 3 and 9 >= y >= 7:
             if Pieces[pid].x == x - 1 or Pieces[pid].x == x + 1:
                 return True
@@ -387,7 +365,9 @@ def check_elephants(x,y):
                 return True
         return False
 def check_soldiers(x,y):
-    if Pieces[pid].x == x and (y == Pieces[pid].y + 1 or y == Pieces[pid].y - 1) :
+    if Pieces[pid].x == x and y == Pieces[pid].y + 1 and Pieces[pid].colour == 0:
+        return True
+    elif Pieces[pid].x == x and y == Pieces[pid].y - 1 and Pieces[pid].colour == 1:
         return True
     elif Pieces[pid].y == y and ((Pieces[pid].y < 5 and (x == Pieces[pid].x - 1 or x == Pieces[pid].x + 1) and Pieces[pid].colour == 1) or (Pieces[pid].y > 4 and (x == Pieces[pid].x - 1 or x == Pieces[pid].x + 1)  and Pieces[pid].colour == 0)):
         return True
@@ -399,8 +379,7 @@ def create_Chess():
         Pieces.append(temp)
 def show_32p():
     for i in range(32):
-        if Pieces[i].status == 1:
-            Pieces[i].draw()
+        Pieces[i].draw()
 def show_dead():
     global rdeadcount, bdeadcount
     for i in range(len(Dead)):
@@ -435,7 +414,7 @@ def Check_space(x,y):
             Space = 1
     return Space
 def check_status(x,y):
-    global rdeadcount, bdeadcount
+    global rdeadcount, bdeadcount, Back
     for i in range(Start(turns), Start(turns)+16):
         if Pieces[i].x == x and Pieces[i].y == y:
             Pieces[i].eat()
@@ -556,16 +535,15 @@ def Startup():
             elif start_button.draw():
                 main()
             elif event.type == pygame.MOUSEMOTION:
-                pos = pygame.mouse.get_pos()
-                pygame.display.set_caption(caption + str(pos))
-            
+                pygame.display.set_caption(caption)
         pygame.display.update()
 
 def main():
-    global running, L_click, pid, turns, counter, Pieces, Dead, Win, rdeadcount, bdeadcount
+    global running, L_click, pid, turns, counter, Pieces, Dead, Win, rdeadcount, bdeadcount, gamecounter, Back, temppid
     turns = 0
     Pieces = []
     Dead = []
+    Back = []
     Win = 0
     pid = -1
     create_Chess()
@@ -578,9 +556,8 @@ def main():
                 rdeadcount += 1 
             elif Dead[0].colour == 1:
                 Dead[0].y = 450
-                bdeadcount += 1
+                bdeadcount += 1          
     while Win == 0 and running:
-        
         Win = check_win()
         pos = pygame.mouse.get_pos()
         Background_pos(pos)
@@ -595,49 +572,59 @@ def main():
         draw_text("Selected: "+str(Pieces[pid].name), select_font, (0,0,0), 1010, 100)
         show_32p()
         show_dead()
+        if save_button.draw():
+            saveFile()
+        if menu_button.draw():
+            return
+        if reverse_button.draw():
+            if len(Back) != 0:
+                Pieces[temppid].y = Back.pop()
+                Pieces[temppid].x = Back.pop()
+                turns = switch_turn(turns)
+                print("Undo")
+            else:
+                print("No more undo")
         for event in pygame.event.get() :   
             if event.type == pygame.QUIT:
                 running = False
                 return
-            elif save_button.draw():
-                saveFile()
             elif event.type == pygame.MOUSEMOTION:
-                pygame.display.set_caption(caption + str(pos))
+                pygame.display.set_caption(caption)
                 rollover_chess(pos)
-            
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     if L_click == 1:
                         CanGo = Check_space(boardpos.x, boardpos.y)
                         ValidMove = check_movement(boardpos.x, boardpos.y)
                         if L_click == 1 and pid != -1 and CanGo != 3 and ValidMove != False:
+                            temppid = pid
+                            Back.append(Pieces[temppid].x)
+                            Back.append(Pieces[temppid].y)
                             Pieces[pid].move(boardpos.x, boardpos.y)
                             turns = switch_turn(turns)
                             L_click = 0
                             pid = -1
                             check_status(boardpos.x, boardpos.y)
                             CanGo = 0
-                            
                         else:
                             ValidMove = True
                             L_click = 0
                             pid = -1
-                            print("Invalid Move!")
-                            
+                            print("Invalid Move")
                     else:
                         select_chess(pos)
                         print(pid)
                         if pid != -1:
-                            L_click = 1
-                            
+                            L_click = 1 
         if Win == 1:
             End()
         pygame.display.update()
+        timer.tick(fps)
+        
         
 def End():
     global running
     while running:
-        
         for event in pygame.event.get():
             screen.blit(Winner, (0, 0))
             if event.type == pygame.QUIT or quit_button.draw():
